@@ -5,12 +5,14 @@ const router = express.Router();
 const todoSchema = require('./schemas/todoSchema');
 const Todo = new mongoose.model("Todo",todoSchema);
 
+const checkLogin = require("../middlewares/checkLogin");
+
 
 
 
 //get all todos
-router.get("/", async(req,res)=>{
-await Todo.find({status:'active'},(err,data)=>{
+router.get("/",checkLogin,(req,res)=>{
+ Todo.find({status:'active'},(err,data)=>{
     if(err){
         res.status(500).json({
             error:"There was a server side error!"
@@ -23,11 +25,43 @@ await Todo.find({status:'active'},(err,data)=>{
     }
 })
 });
+
+//get active todos
+router.get("/active",async(req,res)=>{
+    const todo = new Todo();
+    const data = await todo.findActive();
+    res.status(200).json({
+        data,
+    });
+});
+//get active todos with callBack
+router.get("/active-callback",(req,res)=>{
+    const todo = new Todo();
+    todo.findActiveCallBack((err,data)=>{
+        res.status(200).json({
+            data,
+        });
+    });
+});
+//get statics 
+router.get("/js",async(req,res)=>{
+    const data = await Todo.findActive();
+    res.status(200).json({
+        data,
+    });
+});
+//get query helper 
+router.get("/language",async(req,res)=>{
+    const data = await Todo.find().byLanguage("js");
+    res.status(200).json({
+        data,
+    });
+});
 //get a todos by id
-router.get("/:id", async(req,res)=>{
-    await Todo.find({_id:req.params.id},(err,data)=>{
+router.get("/:id",(req,res)=>{
+     Todo.find({_id:req.params.id},(err,data)=>{
         if(err){
-            res.status(500).json({
+           res.status(500).json({
                 error:"There was a server side error!"
             });
         }else{
@@ -39,9 +73,9 @@ router.get("/:id", async(req,res)=>{
     })
 });
 
-router.post("/", async(req,res)=>{
+router.post("/", (req,res)=>{
 const newTodo = new Todo(req.body);
-await newTodo.save((err) =>{
+ newTodo.save((err) =>{
     if(err){
         res.status(500).json({
             error:"There was a server side error!"
@@ -54,8 +88,8 @@ await newTodo.save((err) =>{
 })
 });
 //multiple todo save
-router.post("/:all", async(req,res)=>{
-await Todo.insertMany(req.body, (err)=>{
+router.post("/:all", (req,res)=>{
+ Todo.insertMany(req.body, (err)=>{
 if (err) {
     res.status(500).json({
         error:"There was a server side error!"
@@ -68,7 +102,7 @@ if (err) {
 })
 });
 
-router.put("/:id", async(req,res)=>{
+router.put("/:id",(req,res)=>{
 var result =  Todo.findOneAndUpdate({ _id: req.params.id }, {$set:{status:'active'}}, { new: true,useFindAndModify:false }, (err, doc) => {
     if (!err) {
                  res.status(200).json({
@@ -83,7 +117,7 @@ var result =  Todo.findOneAndUpdate({ _id: req.params.id }, {$set:{status:'activ
 console.log(result);
 });
 
-router.delete("/:id", async(req,res)=>{
+router.delete("/:id",(req,res)=>{
  Todo.deleteOne({_id:req.params.id},(err)=>{
         if(err){
             res.status(500).json({

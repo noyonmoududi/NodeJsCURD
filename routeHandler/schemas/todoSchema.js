@@ -17,4 +17,26 @@ date:{
 },
 });
 
+todoSchema.methods={
+findActive: function(){
+    return mongoose.model("Todo").find({status:"active"});
+},
+findActiveCallBack: function(cb){
+    return mongoose.model("Todo").find({status:"active"},cb);
+},
+};
+   
+todoSchema.statics={
+findByJs: function() {
+    return this.find({title: /js/i});
+},
+};
+
+todoSchema.query={
+    byLanguage: function(language) {
+        return this.find({title: new RegExp(language,"i")});
+    },
+    };
+
+
 module.exports = todoSchema;
